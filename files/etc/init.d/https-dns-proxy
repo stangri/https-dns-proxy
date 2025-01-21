@@ -153,7 +153,7 @@ boot() {
 
 start_instance() {
 	local cfg="$1" param="$2"
-	local PROG_param 
+	local PROG_param
 	local listen_addr listen_port ipv6_resolvers_only p url iface
 
 	config_get url "$cfg" 'resolver_url'
@@ -375,71 +375,70 @@ dnsmasq_doh_server() {
 	esac
 }
 
-dnsmasq_create_server_backup() {
-	local cfg="$1" i
-	[ -n "$(uci_get 'dhcp' "$cfg")" ] || return 1
-#	uci_remove 'dhcp' "$cfg" 'doh_server' # this removes outdated doh_server entries, but causes unnecessary dnsmasq restarts
-	if [ -z "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')" ]; then
-		if [ -z "$(uci_get 'dhcp' "$cfg" 'noresolv')" ]; then
-			uci_set 'dhcp' "$cfg" 'doh_backup_noresolv' '-1'
-		else
-			uci_set 'dhcp' "$cfg" 'doh_backup_noresolv' "$(uci_get 'dhcp' "$cfg" noresolv)"
-		fi
-		uci_set 'dhcp' "$cfg" 'noresolv' 1
-	fi
-	if [ -z "$(uci_get 'dhcp' "$cfg" 'doh_backup_server')" ]; then
-		if [ -z "$(uci_get 'dhcp' "$cfg" 'server')" ]; then
-			uci_add_list 'dhcp' "$cfg" 'doh_backup_server' ""
-		fi
-		for i in $(uci_get 'dhcp' "$cfg" 'server'); do
-			uci_add_list 'dhcp' "$cfg" 'doh_backup_server' "$i"
-			if [ "$i" = "$(echo "$i" | tr -d /\#)" ]; then
-				uci_remove_list 'dhcp' "$cfg" 'server' "$i"
-			fi
-		done
-	fi
-	return 0
-}
-
-dnsmasq_restore_server_backup() {
-	local cfg="$1" i
-	[ -n "$(uci_get 'dhcp' "$cfg")" ] || return 0
-	if [ -n "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')" ]; then
-		if [ "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')" = "-1" ]; then
-			uci_remove 'dhcp' "$cfg" 'noresolv'
-		else
-			uci_set 'dhcp' "$cfg" 'noresolv' "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')"
-		fi
-		uci_remove 'dhcp' "$cfg" 'doh_backup_noresolv'
-	fi
-	if uci_get 'dhcp' "$cfg" 'doh_backup_server' >/dev/null 2>&1; then
-		dnsmasq_doh_server "$cfg" 'remove'
-		for i in $(uci_get 'dhcp' "$cfg" 'doh_backup_server'); do
-			uci_add_list_if_new 'dhcp' "$cfg" 'server' "$i"
-		done
-		uci_remove 'dhcp' "$cfg" 'doh_backup_server'
-	fi
-}
-
 dhcp_backup() {
+	_dnsmasq_create_server_backup() {
+		local cfg="$1" i
+		[ -n "$(uci_get 'dhcp' "$cfg")" ] || return 1
+	#	uci_remove 'dhcp' "$cfg" 'doh_server' # this removes outdated doh_server entries, but causes unnecessary dnsmasq restarts
+		if [ -z "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')" ]; then
+			if [ -z "$(uci_get 'dhcp' "$cfg" 'noresolv')" ]; then
+				uci_set 'dhcp' "$cfg" 'doh_backup_noresolv' '-1'
+			else
+				uci_set 'dhcp' "$cfg" 'doh_backup_noresolv' "$(uci_get 'dhcp' "$cfg" noresolv)"
+			fi
+			uci_set 'dhcp' "$cfg" 'noresolv' 1
+		fi
+		if [ -z "$(uci_get 'dhcp' "$cfg" 'doh_backup_server')" ]; then
+			if [ -z "$(uci_get 'dhcp' "$cfg" 'server')" ]; then
+				uci_add_list 'dhcp' "$cfg" 'doh_backup_server' ""
+			fi
+			for i in $(uci_get 'dhcp' "$cfg" 'server'); do
+				uci_add_list 'dhcp' "$cfg" 'doh_backup_server' "$i"
+				if [ "$i" = "$(echo "$i" | tr -d /\#)" ]; then
+					uci_remove_list 'dhcp' "$cfg" 'server' "$i"
+				fi
+			done
+		fi
+		return 0
+	}
+# shellcheck disable=SC2317
+	_dnsmasq_restore_server_backup() {
+		local cfg="$1" i
+		[ -n "$(uci_get 'dhcp' "$cfg")" ] || return 0
+		if [ -n "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')" ]; then
+			if [ "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')" = "-1" ]; then
+				uci_remove 'dhcp' "$cfg" 'noresolv'
+			else
+				uci_set 'dhcp' "$cfg" 'noresolv' "$(uci_get 'dhcp' "$cfg" 'doh_backup_noresolv')"
+			fi
+			uci_remove 'dhcp' "$cfg" 'doh_backup_noresolv'
+		fi
+		if uci_get 'dhcp' "$cfg" 'doh_backup_server' >/dev/null 2>&1; then
+			dnsmasq_doh_server "$cfg" 'remove'
+			for i in $(uci_get 'dhcp' "$cfg" 'doh_backup_server'); do
+				uci_add_list_if_new 'dhcp' "$cfg" 'server' "$i"
+			done
+			uci_remove 'dhcp' "$cfg" 'doh_backup_server'
+		fi
+	}
 	local i
 	config_load 'dhcp'
 	case "$1" in
 		create)
 			if [ "$dnsmasq_config_update" = "*" ]; then
-				config_foreach dnsmasq_create_server_backup 'dnsmasq'
+				config_foreach _dnsmasq_create_server_backup 'dnsmasq'
 			elif [ -n "$dnsmasq_config_update" ]; then
 				for i in $dnsmasq_config_update; do
 					if [ -n "$(uci_get 'dhcp' "@dnsmasq[$i]")" ]; then
-						dnsmasq_create_server_backup "@dnsmasq[$i]"
+						_dnsmasq_create_server_backup "@dnsmasq[$i]"
 					elif [ -n "$(uci_get 'dhcp' "$i")" ]; then
-						dnsmasq_create_server_backup "$i"
+						_dnsmasq_create_server_backup "$i"
 					fi
 				done
 			fi
 			;;
 		restore)
-			config_foreach dnsmasq_restore_server_backup 'dnsmasq'
+			config_foreach _dnsmasq_restore_server_backup 'dnsmasq'
 			;;
 	esac
 }
