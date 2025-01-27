@@ -30,7 +30,7 @@ readonly DEFAULT_BOOTSTRAP="${BOOTSTRAP_CF},${BOOTSTRAP_GOOGLE}"
 readonly canaryDomainsMozilla='use-application-dns.net'
 readonly canaryDomainsiCloud='mask.icloud.com mask-h2.icloud.com'
 
-on_boot_trigger=
+hdp_boot_flag=
 
 dnsmasq_restart() { [ -x /etc/init.d/dnsmasq ] || return 1; /etc/init.d/dnsmasq restart >/dev/null 2>&1; }
 is_fw4_restart_needed() { [ "$(uci_get "$packageName" 'config' 'force_dns' '1')" = '1' ]; }
@@ -146,9 +146,12 @@ append_bootstrap() {
 
 boot() {
 	ubus -t 30 wait_for network.interface 2>/dev/null
-	on_boot_trigger=1
-	rc_procd start_service 'on_boot' && service_started 'on_boot'
-	is_resolver_working || { rc_procd stop_service 'on_failed_health_check' && service_stopped 'on_failed_health_check'; }
+	hdp_boot_flag=1
+	if is_resolver_working; then
+		rc_procd start_service 'on_boot' && service_started 'on_boot'
+	else
+		rc_procd stop_service 'on_failed_health_check' && service_stopped 'on_failed_health_check'
+	fi
 }
 
 start_instance() {
@@ -244,8 +247,8 @@ start_service() {
 	local canaryDomains canary_domains_icloud canary_domains_mozilla
 	local dnsmasq_config_update force_dns force_dns_port 
 	local procd_fw_src_interfaces
-
 	local port=5053
+
 	output "Starting $serviceName instances ${param:+$param }"
 	config_load "$packageName"
 	config_get_bool canary_domains_icloud  'config' 'canary_domains_icloud' '1'
@@ -313,10 +316,10 @@ stop_service() {
 service_triggers() {
 	local wan wan6 i
 	local procd_trigger_wan6
-	if [ "$on_boot_trigger" = '1' ]; then
-		output "Setting $serviceName raw_trigger for 'interface.*.up'"
-		procd_add_raw_trigger "interface.*.up" 3000 "/etc/init.d/${packageName}" restart 'on_interface_up'
-		output_okn
+	if [ -n "$hdp_boot_flag" ]; then
+		output "Setting triggers (on_boot) "
+# shellcheck disable=SC2015
+		procd_add_raw_trigger "interface.*.up" 5000 "/etc/init.d/${packageName}" restart 'on_interface_up' && output_okn || output_failn
 	else
 		config_load "$packageName"
 		config_get_bool procd_trigger_wan6 'config' 'procd_trigger_wan6' '0'
@@ -328,9 +331,12 @@ service_triggers() {
 			network_find_wan6 wan6
 			wan6="${wan6:-wan6}"
 		fi
+		output "Setting trigger${wan6:+s} for $wan ${wan6:+$wan6 }"
 		for i in $wan $wan6; do
-			procd_add_interface_trigger "interface.*" "$i" "/etc/init.d/${packageName}" restart 'on_interface_trigger'
+# shellcheck disable=SC2015
+			procd_add_interface_trigger "interface.*" "$i" "/etc/init.d/${packageName}" restart 'on_interface_trigger' && output_ok || output_fail
 		done
+		output '\n'
 	fi
 	procd_add_config_trigger "config.change" "$packageName" "/etc/init.d/${packageName}" reload 'on_config_change'
 }
