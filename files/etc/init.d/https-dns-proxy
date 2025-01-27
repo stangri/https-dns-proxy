@@ -313,12 +313,12 @@ stop_service() {
 	[ "$s" = '0' ] && output_okn || output_failn
 }
 
+# shellcheck disable=SC2015
 service_triggers() {
 	local wan wan6 i
 	local procd_trigger_wan6
 	if [ -n "$hdp_boot_flag" ]; then
-		output "Setting triggers (on_boot) "
-# shellcheck disable=SC2015
+		output "Setting trigger (on_boot) "
 		procd_add_raw_trigger "interface.*.up" 5000 "/etc/init.d/${packageName}" restart 'on_interface_up' && output_okn || output_failn
 	else
 		config_load "$packageName"
@@ -332,13 +332,12 @@ service_triggers() {
 			wan6="${wan6:-wan6}"
 		fi
 		output "Setting trigger${wan6:+s} for $wan ${wan6:+$wan6 }"
-		for i in $wan $wan6; do
-# shellcheck disable=SC2015
+		for i in "$wan" "$wan6"; do
 			procd_add_interface_trigger "interface.*" "$i" "/etc/init.d/${packageName}" restart 'on_interface_trigger' && output_ok || output_fail
 		done
 		output '\n'
+		procd_add_config_trigger "config.change" "$packageName" "/etc/init.d/${packageName}" reload 'on_config_change'
 	fi
-	procd_add_config_trigger "config.change" "$packageName" "/etc/init.d/${packageName}" reload 'on_config_change'
 }
 
 service_started() { is_fw4_restart_needed && procd_set_config_changed firewall; }
