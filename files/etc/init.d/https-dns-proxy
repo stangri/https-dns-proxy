@@ -134,7 +134,7 @@ append_bootstrap() {
 }
 
 boot() {
-	ubus -t 30 wait_for network.interface 2>/dev/null
+#	ubus -t 30 wait_for network.interface 2>/dev/null
 	rc_procd start_service 'on_boot' && service_started 'on_boot'
 	if ! is_resolver_working; then
 		hdp_boot_flag=1
