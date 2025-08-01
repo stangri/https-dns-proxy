@@ -1,4 +1,4 @@
-# SPDX-Identifier-License: MIT
+# SPDX-License-Identifier: MIT
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=https-dns-proxy
