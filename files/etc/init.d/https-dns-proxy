@@ -65,7 +65,7 @@ output_ok() { output "$_OK_"; }
 output_okn() { output "${_OK_}\\n"; }
 output_fail() { output "$_FAIL_"; }
 output_failn() { output "${_FAIL_}\\n"; }
-str_contains() { [ -n "$1" ] &&[ -n "$2" ] && [ "${1//$2}" != "$1" ]; }
+str_contains() { [ "${1//$2}" != "$1" ]; }
 str_contains_word() { echo "$1" | grep -qw "$2"; }
 uci_add_list_if_new() {
 	local PACKAGE="$1"
