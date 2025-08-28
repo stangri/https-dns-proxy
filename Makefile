@@ -21,12 +21,6 @@ TARGET_CFLAGS += $(FPIC)
 TARGET_LDFLAGS += -Wl,--gc-sections
 CMAKE_OPTIONS += -DCLANG_TIDY_EXE= -DSW_VERSION=$(PKG_VERSION)-r$(PKG_RELEASE)
 
-CONFIGURE_ARGS += \
-	$(if $(CONFIG_LIBCURL_OPENSSL),--with-openssl="$(STAGING_DIR)/usr",--without-openssl) \
-	$(if $(CONFIG_LIBCURL_NGHTTP2),--with-nghttp2="$(STAGING_DIR)/usr",--without-nghttp2) \
-	$(if $(CONFIG_LIBCURL_NGHTTP3),--with-nghttp3="$(STAGING_DIR)/usr",--without-nghttp3) \
-	$(if $(CONFIG_LIBCURL_NGTCP2),--with-ngtcp2="$(STAGING_DIR)/usr",--without-ngtcp2) \
-
 define Package/https-dns-proxy
 	SECTION:=net
 	CATEGORY:=Network
