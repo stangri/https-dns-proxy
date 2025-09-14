@@ -2,13 +2,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=https-dns-proxy
-PKG_VERSION:=2025.09.01
+PKG_VERSION:=2025.09.11
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/aarond10/https_dns_proxy/
-PKG_SOURCE_VERSION:=daa0d39304f1131a6c65b7946773d782d5fc2fa8
-PKG_MIRROR_HASH:=df6e5e2a911de2a8fcd76eb469eb231791ad1947bb28c43cfddec8c215be69ba
+PKG_SOURCE_URL:=https://github.com/baranyaib90/https_dns_proxy/
+PKG_SOURCE_VERSION:=71d3065490b6020a92d0ab7da69d13be967753e5
+PKG_MIRROR_HASH:=0f934caea9823131af4e517365c18086b0e595b3ab1266b175e793b056b023db
 
 PKG_MAINTAINER:=Stan Grishin <stangri@melmac.ca>
 PKG_LICENSE:=MIT
