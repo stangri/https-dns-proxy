@@ -83,7 +83,8 @@ uci_changes() {
 	local PACKAGE="$1"
 	local CONFIG="$2"
 	local OPTION="$3"
-	/sbin/uci ${UCI_CONFIG_DIR:+-c $UCI_CONFIG_DIR} changes "$PACKAGE${CONFIG:+.$CONFIG}${OPTION:+.$OPTION}"
+	[ -s "${UCI_CONFIG_DIR:-/etc/config/}${PACKAGE}" ] && \
+	[ -n "$(/sbin/uci ${UCI_CONFIG_DIR:+-c $UCI_CONFIG_DIR} changes "$PACKAGE${CONFIG:+.$CONFIG}${OPTION:+.$OPTION}")" ]
 }
 version() { echo "$PKG_VERSION"; }
 
@@ -306,7 +307,7 @@ start_service() {
 	config_load "$packageName"
 	config_foreach start_instance "$packageName" "$param"
 	output "\\n"
-	if [ -n "$(uci_changes dhcp)" ]; then
+	if uci_changes 'dhcp'; then
 		output "Updating dnsmasq config "
 		if uci_commit 'dhcp'; then
 			output_okn
@@ -344,7 +345,7 @@ stop_service() {
 		canaryDomains="${canaryDomains:+$canaryDomains }${canaryDomainsMozilla}"
 	fi
 	dhcp_backup 'restore'
-	if [ -n "$(uci_changes dhcp)" ]; then
+	if uci_changes 'dhcp'; then
 		uci_commit 'dhcp'
 		dnsmasq_restart || s=1
 	fi
