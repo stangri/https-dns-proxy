@@ -184,14 +184,14 @@ append_boot() {
 	[ -z "$_loctmp" ] && return 0
 	IFS=" ,"
 	for i in $_loctmp; do
-		if { [ "$force_ipv6" -eq 0 ] && is_ipv4 "$i"; } || \
-			{ [ "$force_ipv6" -ne 0 ] && is_ipv6 "$i"; }; then
+		if { [ -z "$force_ipv6" ] && is_ipv4 "$i"; } || \
+			{ [ -z "$force_ipv6" ] && is_ipv6 "$i"; }; then
 			[ -z "$_newtmp" ] && _newtmp="$i" || _newtmp="${_newtmp},${i}"
 		fi
 	done
 	IFS="$_old_ifs"
 	[ -n "$_newtmp" ] && xappend "$switch $_newtmp"
-	[ "$force_ipv6" -eq 0 ] && xappend '-4'
+	[ -z "$force_ipv6" ] && xappend '-4'
 }
 
 boot() {
@@ -240,6 +240,7 @@ start_instance() {
 	config_get listen_addr     "$cfg" 'listen_addr' "$global_listen_addr"
 	config_get listen_port     "$cfg" 'listen_port' "$port"
 	config_get_bool force_ipv6 "$cfg" 'force_ipv6_resolvers' "$global_force_ipv6"
+	[ "$force_ipv6" = '1' ] || unset force_ipv6
 
 	append_parm "$cfg" 'resolver_url'       '-r'
 	append_parm "$cfg" 'listen_addr'        '-a' "$global_listen_addr"        '127.0.0.1'
@@ -367,16 +368,16 @@ start_service() {
 stop_service() {
 	local param="$1"
 	local canaryDomains
-	local s=0
+	local _error=
 	output "Stopping $serviceName ${param:+$param }"
 	load_package_config "$param"
 	dhcp_backup 'restore'
 	if uci_changes 'dhcp'; then
 		uci_commit 'dhcp'
-		dnsmasq_restart || s=1
+		dnsmasq_restart || _error=1
 	fi
 # shellcheck disable=SC2015
-	[ "$s" = '0' ] && output_okn || output_failn
+	[ -z "$_error" ] && output_okn || output_failn
 }
 
 # shellcheck disable=SC2015
