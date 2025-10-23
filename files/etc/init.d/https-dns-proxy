@@ -206,7 +206,7 @@ load_package_config() {
 	config_get_bool procd_trigger_wan6     'config' 'procd_trigger_wan6' '0'
 	config_get_bool global_force_http1     'config' 'force_http1' '0'
 	config_get_bool global_force_http3     'config' 'force_http3' '0'
-	config_get_bool global_force_ipv6      'config' 'global_force_ipv6_resolvers' '0'
+	config_get_bool global_force_ipv6      'config' 'force_ipv6_resolvers' '0'
 	config_get dnsmasq_config_update       'config' 'dnsmasq_config_update' '*'
 	config_get force_dns_port              'config' 'force_dns_port' '53 853'
 	config_get force_dns_src_interface     'config' 'force_dns_src_interface' 'lan'
