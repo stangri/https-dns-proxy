@@ -223,6 +223,7 @@ load_package_config() {
 	config_get global_logfile              'config' 'logfile'
 	config_get global_statistic_interval   'config' 'statistic_interval' '0'
 	config_get global_log_limit            'config' 'log_limit' '0'
+	config_get global_source_addr          'config' 'source_addr'
 	[ "$canary_domains_icloud" = '1' ]  && canaryDomains="${canaryDomains:+$canaryDomains }${canaryDomainsiCloud}"
 	[ "$canary_domains_mozilla" = '1' ] && canaryDomains="${canaryDomains:+$canaryDomains }${canaryDomainsMozilla}"
 	[ "$force_dns" = '1' ]              || unset force_dns
@@ -259,6 +260,7 @@ start_instance() {
 	append_parm "$cfg" 'statistic_interval' '-s' "$global_statistic_interval" '0'
 	append_parm "$cfg" 'log_limit'          '-F' "$global_log_limit"          '0'
 	append_cnt  "$cfg" 'verbosity'          '-v' "$global_verbosity"
+	append_parm "$cfg" 'source_addr'				'-S' "$global_source_addr"
 
 	if [ "$dnsmasq_config_update" = '*' ]; then
 		config_load 'dhcp'
