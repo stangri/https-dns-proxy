@@ -219,7 +219,7 @@ load_package_config() {
 	config_get global_ca_certs_file        'config' 'ca_certs_file'
 	config_get global_user                 'config' 'user' 'nobody'
 	config_get global_group                'config' 'group' 'nogroup'
-	config_get global_verbosity            'config' 'verbosity' '1'
+	config_get global_verbosity            'config' 'verbosity' '0'
 	config_get global_logfile              'config' 'logfile'
 	config_get global_statistic_interval   'config' 'statistic_interval' '0'
 	config_get global_log_limit            'config' 'log_limit' '0'
