@@ -67,7 +67,6 @@ global_log_limit=
 
 dnsmasq_restart() { /etc/init.d/dnsmasq restart >/dev/null 2>&1; }
 is_alnum() { case "$1" in (*[![:alnum:]_\ @]*|"") return 1;; esac; }
-is_fw4_restart_needed() { [ "$(uci_get "$packageName" 'config' 'force_dns' '1')" = '1' ]; }
 is_mac_address() { expr "$1" : '[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]$' >/dev/null; }
 is_integer() { case "$1" in ''|*[!0-9]*) return 1;; esac; [ "$1" -ge 1 ] && [ "$1" -le 65535 ] || return 1; return 0; }
 is_ipv4() { expr "$1" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' >/dev/null; }
